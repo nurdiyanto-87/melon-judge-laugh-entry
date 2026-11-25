@@ -7,7 +7,7 @@ characters, to /output/entry.txt.
 
 import os
 
-JOKE = "The office printer only jams when a deadline is an hour away \u2014 it's not broken, it's middle management."
+JOKE = "The office printer only jams an hour before a deadline \u2014 it's not broken, it's middle management."
 
 
 def main() -> None:
@@ -18,6 +18,18 @@ def main() -> None:
     assert "\n" not in text, "joke must be a single line"
     with open(os.path.join(out_dir, "entry.txt"), "w", encoding="utf-8") as f:
         f.write(text + "\n")
+    # Verify the written file byte-for-byte: a silent partial/truncated
+    # write must never pass as a valid entry.
+    with open(os.path.join(out_dir, "entry.txt"), "rb") as f:
+        written = f.read()
+    expected = (text + "\n").encode("utf-8")
+    if written != expected:
+        raise SystemExit(
+            f"verification failed: entry.txt is {len(written)} bytes, "
+            f"expected {len(expected)} bytes"
+        )
+    if written.count(b"\n") != 1:
+        raise SystemExit("verification failed: entry.txt is not a single line")
 
 
 if __name__ == "__main__":
